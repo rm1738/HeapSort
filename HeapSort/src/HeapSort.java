@@ -31,66 +31,72 @@ public class HeapSort {
         File file = null;
         file = new File(args[zero]);
 
-        if (!file.exists()) {
-            System.out.println("The input file does not exist " + args[zero]);
-            return;
-        }
+        if (file.exists()) {
 
-        // Sorting
-        int sizeOfPool = Integer.parseInt(args[one]);
-        BufferPool bufferPool = new BufferPool(file, sizeOfPool, statistics);
-        long startOfSort = System.currentTimeMillis();
-        int numRecords = (int)file.length() / recordSize;
-        MaxHeap heap = new MaxHeap(numRecords, bufferPool);
-        heap.heapSort(numRecords);
-        bufferPool.flush();
-        long endOfSort = System.currentTimeMillis();
-        long timeTakenToSort = endOfSort - startOfSort;
+            // Sorting
+            int sizeOfPool = Integer.parseInt(args[one]);
+            BufferPool bufferPool = new BufferPool(file, sizeOfPool,
+                statistics);
+            long startOfSort = System.currentTimeMillis();
+            int numRecords = (int)file.length() / recordSize;
+            MaxHeap heap = new MaxHeap(numRecords, bufferPool);
+            heap.heapSort(numRecords);
+            bufferPool.flush();
+            long endOfSort = System.currentTimeMillis();
+            long timeTakenToSort = endOfSort - startOfSort;
 
-        // Statistics File
-        File statisticsFile = new File(args[two]);
-        FileWriter writer = new FileWriter(statisticsFile, false);
-        writer.close();
-        writer = new FileWriter(statisticsFile, true);
-        writer.write("Name of File: " + args[zero]);
-        writer.write("\nNumber of Cache Hits: " + statistics.cacheHitCount());
-        writer.write("\nNumber of Cache Misses: " + statistics
-            .cacheMissCount());
-        writer.write("\nNumber of Disk Reads: " + statistics.diskReadCount());
-        writer.write("\nNumber of Disk Writes: " + statistics.diskWriteCount());
-        writer.write("\nTime taken to Sort: " + timeTakenToSort + "\n");
-        writer.close();
+            // Statistics File
+            File statisticsFile = new File(args[two]);
+            FileWriter writer = new FileWriter(statisticsFile, false);
+            writer.close();
+            writer = new FileWriter(statisticsFile, true);
+            writer.write("Name of File: " + args[zero]);
+            writer.write("\nNumber of Cache Hits: " + statistics
+                .cacheHitCount());
+            writer.write("\nNumber of Cache Misses: " + statistics
+                .cacheMissCount());
+            writer.write("\nNumber of Disk Reads: " + statistics
+                .diskReadCount());
+            writer.write("\nNumber of Disk Writes: " + statistics
+                .diskWriteCount());
+            writer.write("\nTime taken to Sort: " + timeTakenToSort + "\n");
+            writer.close();
 
-        // Random Access File
-        RandomAccessFile random = new RandomAccessFile(args[zero], "rw");
-        int numberOfRecords = (int)file.length() / recordSize;
-        int i = 0;
-        boolean t = i < numberOfRecords / block;
-        while (t) {
+            // Random Access File
+            RandomAccessFile random = new RandomAccessFile(args[zero], "rw");
+            int numberOfRecords = (int)file.length() / recordSize;
+            int i = zero;
+            boolean t = i < numberOfRecords / block;
+            while (t) {
 
-            boolean greaterThanZero = i > 0;
-            boolean noRemainder = i % 8 == 0;
+                int nItemsPerLine = 8;
+                boolean greaterThanZero = i > zero;
+                boolean noRemainder = i % nItemsPerLine == zero;
 
-            if (greaterThanZero && noRemainder) {
-                System.out.println();
+                if (greaterThanZero && noRemainder) {
+                    System.out.println();
+                }
+
+                int neededI = i * block * recordSize;
+
+                random.seek(neededI);
+                int recordKey = random.readUnsignedShort();
+
+                random.seek(neededI + two);
+                int recordValue = random.readUnsignedShort();
+
+                Record rc = new Record(recordKey, recordValue);
+                System.out.print(rc.getKey() + " " + rc.getValue() + "    ");
+                i++;
+
             }
 
-            int neededI = i * block * 4;
-
-            random.seek(neededI);
-            int recordKey = random.readUnsignedShort();
-
-            random.seek(neededI + two);
-            int recordValue = random.readUnsignedShort();
-
-            Record rc = new Record(recordKey, recordValue);
-            System.out.print(rc.getKey() + " " + rc.getValue() + "    ");
-            i++;
+            random.close();
 
         }
 
-        random.close();
-
+        System.out.println("The input file does not exist " + args[zero]);
+        return;
     }
 
 }
