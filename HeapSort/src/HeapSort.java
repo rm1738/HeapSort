@@ -8,11 +8,15 @@ import java.io.RandomAccessFile;
  * records, and a spatial data structure to support
  * geographical queryies.
  * 
- * @author {your PID}
+ * @author Rahul Menon
  */
 public class HeapSort {
 
     private static final int recordSize = 4;
+    private static final int block = 1024;
+    private static final int zero = 0;
+    private static final int one = 1;
+    private static final int two = 2;
 
     /**
      * This is the entry point of the application
@@ -25,15 +29,15 @@ public class HeapSort {
 
         Statistics statistics = new Statistics();
         File file = null;
-        file = new File(args[0]);
+        file = new File(args[zero]);
 
         if (!file.exists()) {
-            System.out.println("The input file does not exist " + args[0]);
+            System.out.println("The input file does not exist " + args[zero]);
             return;
         }
 
         // Sorting
-        int sizeOfPool = Integer.parseInt(args[1]);
+        int sizeOfPool = Integer.parseInt(args[one]);
         BufferPool bufferPool = new BufferPool(file, sizeOfPool, statistics);
         long startOfSort = System.currentTimeMillis();
         int numRecords = (int)file.length() / recordSize;
@@ -44,11 +48,11 @@ public class HeapSort {
         long timeTakenToSort = endOfSort - startOfSort;
 
         // Statistics File
-        File statisticsFile = new File(args[2]);
+        File statisticsFile = new File(args[two]);
         FileWriter writer = new FileWriter(statisticsFile, false);
         writer.close();
         writer = new FileWriter(statisticsFile, true);
-        writer.write("Name of File: " + args[0]);
+        writer.write("Name of File: " + args[zero]);
         writer.write("\nNumber of Cache Hits: " + statistics.cacheHitCount());
         writer.write("\nNumber of Cache Misses: " + statistics
             .cacheMissCount());
@@ -58,22 +62,25 @@ public class HeapSort {
         writer.close();
 
         // Random Access File
-        @SuppressWarnings("resource")
-        RandomAccessFile random = new RandomAccessFile(args[0], "rw");
-        int numberOfRecords = (int)file.length() / 4;
+        RandomAccessFile random = new RandomAccessFile(args[zero], "rw");
+        int numberOfRecords = (int)file.length() / recordSize;
         int i = 0;
-        boolean t = i < numberOfRecords / 1024;
+        boolean t = i < numberOfRecords / block;
         while (t) {
-            if (i > 0 && i % 8 == 0) {
+
+            boolean greaterThanZero = i > 0;
+            boolean noRemainder = i % 8 == 0;
+
+            if (greaterThanZero && noRemainder) {
                 System.out.println();
             }
 
-            int index = i * 1024 * 4;
+            int neededI = i * block * 4;
 
-            random.seek(index);
+            random.seek(neededI);
             int recordKey = random.readUnsignedShort();
 
-            random.seek(index + 2);
+            random.seek(neededI + two);
             int recordValue = random.readUnsignedShort();
 
             Record rc = new Record(recordKey, recordValue);
